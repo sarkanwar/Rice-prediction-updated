@@ -1,6 +1,7 @@
 
 from __future__ import annotations
-import os, io, re, pandas as pd, requests
+import os, io, re
+import pandas as pd, requests
 
 BASE = "https://api.data.gov.in/resource"
 
@@ -11,21 +12,14 @@ def _extract_resource_id(s: str) -> str:
     if s.startswith("resource/"): return s.split("/", 1)[1]
     return s
 
-def _ensure_dir_for_file(path: str):
-    parent = os.path.dirname(path)
-    if parent and not os.path.exists(parent):
-        os.makedirs(parent, exist_ok=True)
-
-def fetch_datagov_prices_csv(api_key: str, resource_id: str, out_csv: str = "data/basmati_prices.csv",
+def fetch_datagov_prices_csv(api_key: str, resource_id: str, out_csv: str = "basmati_prices.csv",
                              commodity_filter: str = "Rice", state: str | None = None,
                              centre: str | None = None, date_from: str | None = None,
                              date_to: str | None = None, prefer_csv: bool = False) -> str:
-    """
-    Robust fetcher for data.gov.in datasets. Automatically creates output folder if missing.
-    """
+    """Fetch from data.gov.in and save Date,Price CSV. Always saves in working dir."""
     rid = _extract_resource_id(resource_id)
     if not rid:
-        raise ValueError("Invalid Resource ID: please use just the UUID (e.g. 9ef84268-d588-465a-a308-a864a43d0070).")
+        raise ValueError("Invalid Resource ID: use the UUID (e.g., 9ef84268-d588-465a-a308-a864a43d0070).")
     url = f"{BASE}/{rid}"
     session = requests.Session()
     limit, offset, rows = 1000, 0, []
@@ -36,11 +30,7 @@ def fetch_datagov_prices_csv(api_key: str, resource_id: str, out_csv: str = "dat
         if date_to: params["to"] = date_to
         r = session.get(url, params=params, timeout=45)
         if r.status_code in (404, 405):
-            raise requests.HTTPError(
-                f"{r.status_code} for {url}. "
-                f"Tip: Resource ID must be just the UUID (not full URL). rid='{rid}'. Full request: {r.url}",
-                response=r
-            )
+            raise requests.HTTPError(f"{r.status_code} for {url}. Check Resource ID rid='{rid}'. Full: {r.url}", response=r)
         r.raise_for_status()
         ct = (r.headers.get("content-type") or "").lower()
         if prefer_csv or "csv" in ct:
@@ -48,7 +38,8 @@ def fetch_datagov_prices_csv(api_key: str, resource_id: str, out_csv: str = "dat
             if df_chunk.empty: break
             rows.append(df_chunk); break
         else:
-            try: payload = r.json()
+            try:
+                payload = r.json()
             except Exception as e:
                 raise ValueError(f"Non-JSON response (first 300 chars): {(r.text or '')[:300]}") from e
             chunk = payload.get("records", [])
@@ -58,7 +49,6 @@ def fetch_datagov_prices_csv(api_key: str, resource_id: str, out_csv: str = "dat
             offset += limit
 
     if not rows:
-        _ensure_dir_for_file(out_csv)
         pd.DataFrame(columns=["Date","Price"]).to_csv(out_csv, index=False)
         return out_csv
 
@@ -98,6 +88,5 @@ def fetch_datagov_prices_csv(api_key: str, resource_id: str, out_csv: str = "dat
 
     daily = (df.groupby(df[date_col].dt.date, as_index=False)[price_col].mean()
              .rename(columns={date_col:"Date", price_col:"Price"}).sort_values("Date"))
-    _ensure_dir_for_file(out_csv)
     daily.to_csv(out_csv, index=False)
     return out_csv

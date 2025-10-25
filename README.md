@@ -1,25 +1,16 @@
 
-# 🌾 rice-predictions
+# Minimal Rice Fetcher (Streamlit)
 
-Streamlit app + CLI to fetch rice/basmati prices (Agmarknet via CEDA, data.gov.in),
-engineer indicators (technicals, currency, weather), train SARIMAX + XGBoost, and
-produce 1‑week / 1‑month / 6‑month forecasts.
+Self-contained app with **no package imports from your repo structure** (so no `data_sources` errors).  
+**Main file path:** `streamlit_app.py`
 
-## Run locally
-```bash
-python -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-streamlit run streamlit_app.py
-```
+## Deploy steps (Streamlit Cloud)
+1) Create a new repo and upload these four files.
+2) On share.streamlit.io → New app:
+   - Repository: your repo
+   - Branch: main
+   - Main file path: **streamlit_app.py**
+   - Python: 3.10 or 3.11
+3) Run the app, fill **API key** + **Resource ID**, click **Fetch data**.
 
-## Deploy on Streamlit Cloud
-- Main file path: `streamlit_app.py`
-- Python: 3.10 or 3.11
-
-## CLI examples
-```bash
-python cli.py fetch-agmarknet --state "Haryana" --market "Karnal"   --variety_keywords "Basmati,1121,1509,1718,PB-1"   --date_from 2023-01-01 --date_to 2025-10-25 --out_csv data/basmati_prices.csv
-
-python cli.py run-all --horizons 7 30 180
-```
+The CSV is saved in the app root (e.g., `basmati_prices_YYYY-MM-DD.csv`). No `data/` folder required.
