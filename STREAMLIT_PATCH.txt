@@ -1,0 +1,34 @@
+
+# --- Replace your Agmarknet block in streamlit_app.py with this safer version ---
+# This keeps unique keys and adds Base URL + API key inputs.
+import streamlit as st
+from agmarknet_api import fetch_basmati_prices_csv  # if your module is at root
+# or: from data_sources.agmarknet_api import fetch_basmati_prices_csv
+
+with st.expander("Fetch data from Agmarknet (CEDA API)", expanded=False):
+    col1, col2 = st.columns(2)
+    with col1:
+        state = st.text_input("State", "Haryana", key="ag_state")
+        market = st.text_input("Market", "Karnal", key="ag_market")
+        variety = st.text_input("Variety keywords (comma-separated)", "Basmati,1121,1509,1718,PB-1", key="ag_variety")
+    with col2:
+        date_from = st.text_input("From (YYYY-MM-DD)", "", key="ag_from")
+        date_to   = st.text_input("To (YYYY-MM-DD)", "", key="ag_to")
+        out_csv   = st.text_input("Save to CSV", "data/basmati_prices.csv", key="ag_outcsv")
+    col3, col4 = st.columns(2)
+    with col3:
+        base_url = st.text_input("CEDA API Base URL", "https://api.ceda.ashoka.edu.in", key="ag_base")
+    with col4:
+        api_key = st.text_input("CEDA API Key (optional)", "", key="ag_key")
+    if st.button("Fetch from Agmarknet", key="ag_btn"):
+        keys = [k.strip() for k in variety.split(",") if k.strip()]
+        try:
+            path = fetch_basmati_prices_csv(
+                out_csv=out_csv, state=state or None, market=market or None, variety_keywords=keys,
+                date_from=date_from or None, date_to=date_to or None, commodity_name="Paddy",
+                base_url=base_url, api_key=(api_key or None)
+            )
+            st.success(f"Saved: {path}")
+        except Exception as e:
+            st.exception(e)
+            st.info("If you keep getting 404, visit the API docs page and confirm the correct endpoint path and required key.")
