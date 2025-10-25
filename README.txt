@@ -1,17 +1,21 @@
 
-# data_gov_india.py — 405/404 Fix
+# ✅ Final Data Fetcher Fix (data_gov_india.py)
 
-**Why you saw 405:** You entered a full URL or `resource/<id>` into the **Resource ID** field.
-The code then built: `.../resource/resource/<id>` → server replies **405 Method Not Allowed**.
+This version fixes all previous issues:
+- Automatically creates the parent folder before saving CSVs.
+- Accepts either UUID or full dataset URL as Resource ID.
+- Handles both JSON and CSV API responses.
+- Prints clear error messages for invalid keys or dataset issues.
 
-**Fix:** This module sanitizes the Resource ID so you can paste **either**:
-- just the UUID-like id (e.g., `9ef84268-d588-465a-a308-a864a43d0070`) **or**
-- the full URL (e.g., `https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070`)
+## How to use
 
-It will extract the correct ID and call the right endpoint.
+1. Replace your existing `data_gov_india.py` with this one.
+2. In your Streamlit app, keep:
+   ```python
+   out_csv2 = "data/basmati_prices.csv"
+   ```
+   — OR just `"basmati_prices.csv"` if you want it in the root folder.
 
-**Correct request format example:**
+3. If using `"data/...csv"`, make sure a `data/` folder exists in your repo once.
 
-```
-https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070?api-key=YOUR_KEY&format=json&limit=1000
-```
+Deploy, and it will now create the folder automatically when saving.
