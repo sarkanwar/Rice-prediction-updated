@@ -1,0 +1,16 @@
+
+price_csv: data/basmati_prices.csv
+indicators:
+  usd_inr: { enabled: true, ticker: "USDINR=X", lookback_days: 1095 }
+  brent:   { enabled: true, ticker: "BZ=F",     lookback_days: 1095 }
+weather:
+  enabled: true
+  regions:
+    - { name: "Punjab-Ludhiana", lat: 30.9010, lon: 75.8573 }
+    - { name: "Haryana-Karnal",  lat: 29.6857, lon: 76.9905 }
+    - { name: "UP-Meerut",       lat: 28.9845, lon: 77.7064 }
+model:
+  sarimax: { order: [1,1,1], seasonal_order: [0,1,1,7] }
+  xgboost: { enabled: true, n_estimators: 400, max_depth: 4, learning_rate: 0.05 }
+  test_size_days: 60
+horizons: [7, 30, 180]
